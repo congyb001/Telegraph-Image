@@ -93,6 +93,18 @@
           </div>
         </div>
       </el-header>
+
+      <!-- ★★★ 新增：本次上传粘顶面板 ★★★ -->
+      <div v-if="showLastPanel && lastUploaded.length"
+           style="background:#fff;border-bottom:1px solid #eee;padding:10px 12px;display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:1000">
+        <i class="fas fa-bolt" style="color:#f59e0b;"></i>
+        <span>本次上传：{{ lastUploaded.length }} 个</span>
+        <el-button size="mini" @click="selectLastUploaded">选中本次上传</el-button>
+        <el-button size="mini" type="primary" @click="copyLastUploaded">复制直链</el-button>
+        <el-button size="mini" type="success" @click="makeShortcodeForLast">生成WP瀑布流短代码</el-button>
+        <el-button size="mini" @click="showLastPanel=false">隐藏</el-button>
+      </div>
+
       <el-main class="main-container">
         <div class="content">
           <template v-for="(item, index) in paginatedTableData" :key="index">
@@ -134,19 +146,13 @@
                 <div class="video-content">
                   <video :src="'/file/' + item.name" controls style="width: 100%; height: 100%; object-fit: cover;"></video>
                   <div class="video-title">
-                    <el-popover
-                      trigger="click"
-                      placement="top"
-                      popper-class="custom-popover">
-                      <template #default>
-                        <p v-html="formattedFileDetails(item)"></p>
-                      </template>
+                    <el-popover trigger="click" placement="top" popper-class="custom-popover">
+                      <template #default><p v-html="formattedFileDetails(item)"></p></template>
                       <template #reference>
                         <span :style="{ color: item.metadata.ListType !== 'Block' ? '#fff' : '#aaa' }">{{ item.metadata.fileName || item.name }}</span>
                       </template>
                     </el-popover>
                   </div>
-                    <!-- 控制按钮区域 -->
                   <div class="video-controls">
                     <button class="control-btn like-btn" @click.stop="toggleLike(index, item.name)"><i :class="item.metadata.liked ? 'fas fa-heart liked' : 'far fa-heart'"></i></button>
                     <button class="control-btn edit-btn" @click.stop="handleEditName(item)"><i class="fas fa-edit"></i></button>
@@ -161,20 +167,12 @@
             <template v-else-if="fileType === 'audio'">
               <el-card class="audio-card" :class="{ 'selected': item.selected }">
                 <div class="audio-content">
-                  <!-- 音频标题区域 -->
                   <div class="audio-header">
-                    <div class="audio-avatar">
-                      <img src="./music.svg" alt="Music">
-                    </div>
+                    <div class="audio-avatar"><img src="./music.svg" alt="Music"></div>
                     <div class="audio-info">
                       <div class="audio-title">
-                        <el-popover
-                          trigger="click"
-                          placement="top"
-                          popper-class="custom-popover">
-                          <template #default>
-                            <p v-html="formattedFileDetails(item)"></p>
-                          </template>
+                        <el-popover trigger="click" placement="top" popper-class="custom-popover">
+                          <template #default><p v-html="formattedFileDetails(item)"></p></template>
                           <template #reference>
                             <span :style="{ color: item.metadata.ListType !== 'Block' ? '#fff' : '#aaa' }">{{ item.metadata.fileName || item.name }}</span>
                           </template>
@@ -183,14 +181,7 @@
                       <div class="audio-subtitle">{{ getFileType(item.name) }}</div>
                     </div>
                   </div>
-                  <audio
-                    class="custom-audio-player"
-                    :src="'/file/' + item.name"
-                    controls
-                    preload="metadata">
-                    当前浏览器不支持音频播放
-                  </audio>
-                  <!-- 控制按钮区域 -->
+                  <audio class="custom-audio-player" :src="'/file/' + item.name" controls preload="metadata">当前浏览器不支持音频播放</audio>
                   <div class="audio-controls">
                     <button class="control-btn like-btn" @click.stop="toggleLike(index, item.name)"><i :class="item.metadata.liked ? 'fas fa-heart liked' : 'far fa-heart'"></i></button>
                     <button class="control-btn edit-btn" @click.stop="handleEditName(item)"><i class="fas fa-edit"></i></button>
@@ -205,20 +196,12 @@
             <template v-else>
               <el-card class="file-card" :class="{ 'selected': item.selected }">
                 <div class="file-content">
-                  <!-- 文件标题区域 -->
                   <div class="file-header">
-                    <div class="file-avatar">
-                      <i :class="getFileIcon(item.name)" style="font-size: 32px;"></i>
-                    </div>
+                    <div class="file-avatar"><i :class="getFileIcon(item.name)" style="font-size: 32px;"></i></div>
                     <div class="file-info">
                       <div class="file-title">
-                        <el-popover
-                          trigger="click"
-                          placement="top"
-                          popper-class="custom-popover">
-                          <template #default>
-                            <p v-html="formattedFileDetails(item)"></p>
-                          </template>
+                        <el-popover trigger="click" placement="top" popper-class="custom-popover">
+                          <template #default><p v-html="formattedFileDetails(item)"></p></template>
                           <template #reference>
                             <span :style="{ color: item.metadata.ListType !== 'Block' ? '#fff' : '#aaa' }">{{ item.metadata.fileName || item.name }}</span>
                           </template>
@@ -227,7 +210,6 @@
                       <div class="file-subtitle">{{ getFileType(item.name) }}</div>
                     </div>
                   </div>
-                  <!-- 控制按钮区域 -->
                   <div class="file-controls">
                     <button class="control-btn like-btn" @click.stop="toggleLike(index, item.name)"><i :class="item.metadata.liked ? 'fas fa-heart liked' : 'far fa-heart'"></i></button>
                     <button class="control-btn edit-btn" @click.stop="handleEditName(item)"><i class="fas fa-edit"></i></button>
@@ -240,16 +222,18 @@
             </template>
           </template>
         </div>
-  <div class="pagination-container">
-    <el-pagination
-      background layout="prev, pager, next"
-      :total="filteredTableData.length" :page-size="pageSize"
-      @current-change="handlePageChange" :current-page.sync="currentPage" />
-  </div>
-  <div style="text-align:center;margin-top:16px;">
-    <el-button v-if="nextCursor" @click="loadMore">加载更多</el-button>
-  </div>
-  <el-footer class="footer">
+
+        <div class="pagination-container">
+          <el-pagination
+            background layout="prev, pager, next"
+            :total="filteredTableData.length" :page-size="pageSize"
+            @current-change="handlePageChange" :current-page.sync="currentPage" />
+        </div>
+        <div style="text-align:center;margin-top:16px;">
+          <el-button v-if="nextCursor" @click="loadMore">加载更多</el-button>
+        </div>
+
+        <el-footer class="footer">
           <div>Powered By</div>
           <a href="https://github.com/cf-pages/Telegraph-Image" target="_blank" rel="noopener noreferrer">
             <div><i class="fa-brands fa-github"></i> Telegraph-Image</div>
@@ -258,9 +242,12 @@
       </el-main>
     </el-container>
   </div>
+
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1088465e76e248338296520d5352c618","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script> <!-- Vue -->
-<script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.3/lib/index.js"></script> <!-- ElementUI -->
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.3/lib/index.js"></script>
 <script>
   new Vue({
     el: '#app',
@@ -268,37 +255,14 @@
       baseURL: document.location.origin,
       Number: 0,
       fileConfig: {
-        image: {
-          name: '图片',
-          exts: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'ico'],
-          icon: 'fas fa-image',
-          count: 0
-        },
-        video: {
-          name: '视频',
-          exts: ['mp4', 'webm', 'ogg', 'avi', 'mov', 'wmv', 'flv', 'mkv'],
-          icon: 'fas fa-video',
-          count: 0
-        },
-        audio: {
-          name: '音频',
-          exts: ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'wma'],
-          icon: 'fas fa-music',
-          count: 0
-        },
-        document: {
-          name: '文件',
-          exts: [],
-          icon: 'fas fa-folder-open',
-          count: 0
-        }
+        image: { name: '图片', exts: ['jpg','jpeg','png','gif','webp','bmp','tiff','ico'], icon: 'fas fa-image', count: 0 },
+        video: { name: '视频', exts: ['mp4','webm','ogg','avi','mov','wmv','flv','mkv'], icon: 'fas fa-video', count: 0 },
+        audio: { name: '音频', exts: ['mp3','wav','ogg','flac','aac','m4a','wma'], icon: 'fas fa-music', count: 0 },
+        document: { name: '文件', exts: [], icon: 'fas fa-folder-open', count: 0 }
       },
-      uploadConfig: {
-        maxSize: 20 * 1024 * 1024,  // 最大上传20MB
-        maxConcurrent: 3
-      },
-        tableData: [],
-        nextCursor: null,
+      uploadConfig: { maxSize: 20 * 1024 * 1024, maxConcurrent: 3 },
+      tableData: [],
+      nextCursor: null,
       search: '',
       currentPage: 1,
       pageSize: 15,
@@ -314,33 +278,32 @@
         { name: 'YouCompress', url: 'https://www.youcompress.com/zh-cn/', icon: 'fas fa-file-zipper' },
         { name: 'Cloudinary', url: 'https://console.cloudinary.com/', icon: 'fas fa-cloud' },
       ],
+      /* ★ 新增：记录“本次上传” */
+      lastUploaded: [],       // 保存本次上传成功的 name 列表（不含 /file/ 前缀）
+      showLastPanel: false    // 控制“本次上传”面板显示
     },
     computed: {
       filteredTableData() {
         return this.tableData.filter(data => {
-          // 搜索匹配
           const searchLower = this.search.toLowerCase();
           const matchesSearch = !searchLower || [
             (data.metadata.fileName || '').toLowerCase(),
             data.name?.toLowerCase(),
           ].some(field => field?.includes(searchLower));
 
-          // 筛选匹配
           const matchesFilter = {
             'all': true,
             'favorites': data.metadata.liked,
             'blocked': data.metadata.ListType === 'Block',
             'unblocked': data.metadata.ListType === 'White',
-            'adult': data.metadata.Label?.toLowerCase() === 'adult',
+            'adult': (data.metadata.Label || '').toLowerCase() === 'adult',
           }[this.filterOption] ?? true;
 
-          // 文件类型匹配
-          const ext = data.name.split('.').pop().toLowerCase();
-          const matchesType = this.fileType === 'document' ?
-          !Object.keys(this.fileConfig).some(type =>
-            type !== 'document' && this.fileConfig[type].exts.includes(ext) // 匹配其他所有文件
-          ) :
-          this.fileConfig[this.fileType].exts.includes(ext);
+          const ext = (data.name.split('.').pop() || '').toLowerCase();
+          const matchesType = this.fileType === 'document'
+            ? !Object.keys(this.fileConfig).some(t => t !== 'document' && this.fileConfig[t].exts.includes(ext))
+            : this.fileConfig[this.fileType].exts.includes(ext);
+
           return matchesSearch && matchesFilter && matchesType;
         });
       },
@@ -351,67 +314,61 @@
       sortIcon() { return `fas fa-sort-${this.sortOption === 'dateDesc' ? 'amount-down' : 'alpha-up'}`; },
       filterIcon() {
         return this.filterOption === 'all' ? 'fas fa-filter' :
-        this.filterOption === 'favorites' ? 'fas fa-bookmark' :
-        this.filterOption === 'blocked' ? 'fas fa-lock' :
-        this.filterOption === 'unblocked' ? 'fas fa-unlock' :
-        this.filterOption === 'adult' ? 'fas fa-user-secret' : '';
+               this.filterOption === 'favorites' ? 'fas fa-bookmark' :
+               this.filterOption === 'blocked' ? 'fas fa-lock' :
+               this.filterOption === 'unblocked' ? 'fas fa-unlock' :
+               this.filterOption === 'adult' ? 'fas fa-user-secret' : '';
       },
       fileTypeIcon() {
         return this.fileType === 'image' ? 'fas fa-image' :
-        this.fileType === 'video' ? 'fas fa-video' :
-        this.fileType === 'audio' ? 'fas fa-music' :
-        this.fileType === 'document' ? 'fas fa-folder-open' : '';
+               this.fileType === 'video' ? 'fas fa-video' :
+               this.fileType === 'audio' ? 'fas fa-music' :
+               this.fileType === 'document' ? 'fas fa-folder-open' : '';
       }
     },
-    watch: {  // 监听数据变化
-      tableData: {
-        handler(newData) {
-          this.selectedFiles = newData.filter(file => file.selected);
-        },
-        deep: true
-      },
-      sortOption(newOption) { localStorage.setItem('sortOption', newOption); },
-      filterOption(newOption) { localStorage.setItem('filterOption', newOption); }
+    watch: {
+      tableData: { handler(newData){ this.selectedFiles = newData.filter(f => f.selected); }, deep: true },
+      sortOption(newOption){ localStorage.setItem('sortOption', newOption); },
+      filterOption(newOption){ localStorage.setItem('filterOption', newOption); }
     },
     methods: {
-      refreshDashboard() {location.reload();},  // 刷新页面
-      handleLogout() { window.location.href = '/'; },  // 退出登录
-      handlePageChange(page) { this.currentPage = page; },  // 切换页面
-        handleUpload() { this.$refs.fileInput.click(); },  // 打开文件选择对话框
-        sort(command) { this.sortOption = command; },  // 切换排序方式
-        filter(command) { this.filterOption = command; },  // 切换筛选方式
-        loadMore() {
-          const opts = { method: 'GET', credentials: 'include' };
-          const url = this.nextCursor
-            ? `./api/manage/list?cursor=${encodeURIComponent(this.nextCursor)}`
-            : `./api/manage/list?limit=100`;
-
-          fetch(url, opts)
-            .then(r => r.json())
-            .then(result => {
-              const files = result.keys || [];
-              const mapped = files.map(file => ({
-                ...file,
-                selected: false,
-                metadata: {
-                  ...file.metadata,
-                  liked: file.metadata.liked ?? false,
-                  fileName: file.metadata.fileName ?? file.name,
-                  fileSize: file.metadata.fileSize ?? 0
-                }
-              }));
-              this.tableData = this.tableData.concat(mapped);
-              this.nextCursor = result.list_complete ? null : result.cursor;
-              this.updateStats();
-            })
-            .catch(() => this.$message.error('同步数据时出错，请检查网络连接'));
-        },
-        sortData(data) {
-          return this.sortOption === 'nameAsc' ? data.sort((a, b) => a.name.localeCompare(b.name)) :
-            this.sortOption === 'sizeDesc' ? data.sort((a, b) => b.metadata.fileSize - a.metadata.fileSize) :
-            data.sort((a, b) => b.metadata.TimeStamp - a.metadata.TimeStamp);
+      refreshDashboard(){ location.reload(); },
+      handleLogout(){ window.location.href = '/'; },
+      handlePageChange(page){ this.currentPage = page; },
+      handleUpload(){ this.$refs.fileInput.click(); },
+      sort(command){ this.sortOption = command; },
+      filter(command){ this.filterOption = command; },
+      loadMore() {
+        const opts = { method: 'GET', credentials: 'include' };
+        const url = this.nextCursor
+          ? `./api/manage/list?cursor=${encodeURIComponent(this.nextCursor)}`
+          : `./api/manage/list?limit=100`;
+        fetch(url, opts)
+          .then(r => r.json())
+          .then(result => {
+            const files = result.keys || [];
+            const mapped = files.map(file => ({
+              ...file,
+              selected: false,
+              metadata: {
+                ...file.metadata,
+                liked: file.metadata.liked ?? false,
+                fileName: file.metadata.fileName ?? file.name,
+                fileSize: file.metadata.fileSize ?? 0
+              }
+            }));
+            this.tableData = this.tableData.concat(mapped);
+            this.nextCursor = result.list_complete ? null : result.cursor;
+            this.updateStats();
+          })
+          .catch(() => this.$message.error('同步数据时出错，请检查网络连接'));
       },
-      formattedFileDetails(item) {
+      sortData(data){
+        return this.sortOption === 'nameAsc' ? data.sort((a,b)=>a.name.localeCompare(b.name)) :
+               this.sortOption === 'sizeDesc' ? data.sort((a,b)=>b.metadata.fileSize - a.metadata.fileSize) :
+               data.sort((a,b)=>b.metadata.TimeStamp - a.metadata.TimeStamp);
+      },
+      formattedFileDetails(item){
         const metadata = item.metadata;
         const timestamp = new Date(metadata.TimeStamp).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
         return `
@@ -423,94 +380,74 @@
           </div>
         `;
       },
-      calculatePageSize() {  // 设置页面大小
-        const config = {
-          minSize: 15, // 最小页面卡片数
-          cardWidth: 240,
-          ratio: 3/4, // 卡片高宽比
-          gap: 20, // 卡片间距
-          defaultWidth: 800,
-          defaultHeaderHeight: 60 // 默认Dashboard高度
-        };
-        // 获取容器尺寸
+      calculatePageSize(){
+        const config = { minSize: 15, cardWidth: 240, ratio: 3/4, gap: 20, defaultWidth: 800, defaultHeaderHeight: 60 };
         const content = document.querySelector('.content');
         const header = document.querySelector('.header-content');
         const width = content?.clientWidth || config.defaultWidth;
         const height = window.innerHeight - (header?.offsetHeight || config.defaultHeaderHeight);
-        // 计算行列数
         const cols = Math.floor(width / (config.cardWidth + config.gap));
         const cardHeight = (width / cols - config.gap) * config.ratio;
         const rows = Math.floor(height / (cardHeight + config.gap));
-        // 设置页面大小
         this.pageSize = Math.max(rows * cols, config.minSize);
       },
-      updateWindowWidth() {  // 动态调整页面大小
-        this.windowWidth = window.innerWidth;
-        this.calculatePageSize();
-      },
-      updateStats() {
+      updateWindowWidth(){ this.windowWidth = window.innerWidth; this.calculatePageSize(); },
+      updateStats(){
         this.Number = this.tableData.length;
-        let fileCount = {image: 0, video: 0, audio: 0, document: 0};
+        let fileCount = {image:0, video:0, audio:0, document:0};
         this.tableData.forEach(file => {
-          const ext = file.name.split('.').pop().toLowerCase();
-          const type = Object.keys(this.fileConfig).find(t =>
-            this.fileConfig[t].exts.includes(ext)
-          ) || 'document';
+          const ext = (file.name.split('.').pop() || '').toLowerCase();
+          const type = Object.keys(this.fileConfig).find(t => this.fileConfig[t].exts.includes(ext)) || 'document';
           fileCount[type]++;
         });
-        Object.keys(this.fileConfig).forEach(type => {
-          this.fileConfig[type].count = fileCount[type] || 0;
-        });
+        Object.keys(this.fileConfig).forEach(t => this.fileConfig[t].count = fileCount[t] || 0);
       },
-      // 文件操作
-      async uploadFiles(event) {
+
+      /* ========== 上传：改为即时插入 + 记录“本次上传” ========== */
+      async uploadFiles(event){
         const files = Array.from(event.target.files || []);
         if (!files.length) return;
-        // 文件验证配置
-        // telegram-bot可分发的最大文件大小（20MB）
-        // 大于20MB虽然能够成功上传，但无法获取文件链接
+
         const config = this.uploadConfig;
-        // 过滤有效文件
         const valid = [], invalid = [];
-        files.forEach(file => {
-          (file.size <= config.maxSize ? valid : invalid).push(file);
-        });
-        // 显示错误信息
-        if(invalid.length) { this.$message.error(`文件超过${config.maxSize/1024/1024}MB: \n${invalid.map(f => f.name).join('\n')}`); }
-        if(!valid.length) { this.$message.info('没有符合条件的文件'); event.target.value = ''; return; }
+        files.forEach(file => (file.size <= config.maxSize ? valid : invalid).push(file));
+
+        if (invalid.length) { this.$message.error(`文件超过${config.maxSize/1024/1024}MB: \n${invalid.map(f => f.name).join('\n')}`); }
+        if (!valid.length) { this.$message.info('没有符合条件的文件'); event.target.value = ''; return; }
 
         try {
-          await this.$confirm(`确定要上传这 ${valid.length} 个文件吗?`, '提示', {
-            type: 'warning'
-          });
+          await this.$confirm(`确定要上传这 ${valid.length} 个文件吗?`, '提示', { type: 'warning' });
           const loading = this.$message({ message: '上传中...', duration: 0 });
           let [successCount, failed] = [0, []];
-          // 并发上传处理函数
+          const justUploaded = [];
+
           const upload = async file => {
             try {
               const formData = new FormData();
               formData.append('file', file);
-              const res = await fetch(`${this.baseURL}/upload`, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include'
-              });
+              const res = await fetch(`${this.baseURL}/upload`, { method: 'POST', body: formData, credentials: 'include' });
               const data = await res.json();
-              if (!res.ok || (Array.isArray(data) && data[0]?.error)) {
-                throw new Error(data[0]?.error || '上传失败');
-              }
+              if (!res.ok || (Array.isArray(data) && data[0]?.error)) throw new Error(data[0]?.error || '上传失败');
+
               const src = data[0]?.src;
               if (!src) throw new Error('未返回文件路径');
-              // 验证并添加到列表
-              const preview = await fetch(`${this.baseURL}${src}`, {
-                credentials: 'include'
-              });
+
+              // 验证可访问
+              const preview = await fetch(`${this.baseURL}${src}`, { credentials: 'include' });
               if (preview.ok) {
+                const name = src.replace(/^\/file\//, '');
+                // 即时插入最前（无需刷新列表）
                 this.tableData.unshift({
-                  name: src.replace(/^\/file\//, ''),
+                  name,
                   selected: false,
-                  metadata: { TimeStamp: Date.now(), fileSize: file.size, fileName: file.name }
+                  metadata: {
+                    TimeStamp: Date.now(),
+                    fileSize: file.size,
+                    fileName: file.name,
+                    liked: false
+                  }
                 });
+                justUploaded.push(name);
                 successCount++;
               }
             } catch (err) {
@@ -518,85 +455,89 @@
               console.error('Upload error:', err);
             }
           };
-          // 分批上传
+
+          // 并发上传
           for (let i = 0; i < valid.length; i += config.maxConcurrent) {
-            await Promise.all(
-              valid.slice(i, i + config.maxConcurrent).map(upload)
-            );
+            await Promise.all(valid.slice(i, i + config.maxConcurrent).map(upload));
           }
           loading.close();
-          successCount && this.$message.success(`成功上传 ${successCount} 个文件`);
-          failed.length && this.$message.error(`上传失败: ${failed.join(', ')}`);
-          this.refreshFileList();
+
+          if (successCount) {
+            this.$message.success(`成功上传 ${successCount} 个文件`);
+            // 记录“本次上传”
+            this.lastUploaded = justUploaded;
+            this.showLastPanel = true;
+            // 强制倒序 + 回到第一页 + 滚至顶部
+            this.sortOption = 'dateDesc';
+            this.sortData(this.tableData);
+            this.currentPage = 1;
+            this.$nextTick(()=> document.querySelector('.header-content')?.scrollIntoView({behavior:'smooth'}));
+          }
+          if (failed.length) this.$message.error(`上传失败: ${failed.join(', ')}`);
 
         } catch {
           this.$message.info('已取消上传');
         }
         event.target.value = '';
       },
-        refreshFileList() {  // 不刷新页面,仅更新数据
-          fetch("./api/manage/list?limit=100", { method: 'GET', credentials: 'include' })
-            .then(response => response.json())
-            .then(result => {
-              const files = result.keys || [];
-              this.tableData = files.map(file => ({
-                ...file,
-                selected: false,
-                metadata: {
-                  ...file.metadata,
-                  liked: file.metadata.liked ?? false,
-                  fileName: file.metadata.fileName ?? file.name,
-                  fileSize: file.metadata.fileSize ?? 0
-                }
-              }));
-              this.nextCursor = result.list_complete ? null : result.cursor;
-              this.updateStats();
-              this.sortData(this.tableData);
-            })
-            .catch(() => this.$message.error('刷新文件列表失败，请检查网络连接'));
-        },
-      toggleSelect(index, name) {
-        const fileIndex = this.tableData.findIndex(file => file.name === name);
-        this.tableData[fileIndex].selected = !this.tableData[fileIndex].selected;
-      },
-      toggleLike(index, name) {
-        console.log(`Toggling like for : ${name}`);
-        const fileIndex = this.tableData.findIndex(file => file.name === name);
-        // 乐观更新收藏状态
-        this.tableData[fileIndex].metadata.liked = !(this.tableData[fileIndex].metadata.liked ?? false);
-        // 发送请求更新服务器数据
-        var requestOptions = { method: 'GET', redirect: 'follow', credentials: 'include' };
-        fetch(`./api/manage/toggleLike/${name}`, requestOptions)
+
+      /* ========== 保持原有的“刷新列表”功能（按钮/菜单使用时才会覆盖） ========== */
+      refreshFileList(){
+        fetch("./api/manage/list?limit=100", { method: 'GET', credentials: 'include' })
           .then(response => response.json())
           .then(result => {
-            if (!result.success) {  // 如果服务器更新失败，将状态还原
-              this.tableData[fileIndex].metadata.liked = !this.tableData[fileIndex].metadata.liked;
-              this.$message({message: '更新收藏状态失败，请稍后重试', type: 'error'});
+            const files = result.keys || [];
+            this.tableData = files.map(file => ({
+              ...file,
+              selected: false,
+              metadata: {
+                ...file.metadata,
+                liked: file.metadata.liked ?? false,
+                fileName: file.metadata.fileName ?? file.name,
+                fileSize: file.metadata.fileSize ?? 0
+              }
+            }));
+            this.nextCursor = result.list_complete ? null : result.cursor;
+            this.updateStats();
+            this.sortData(this.tableData);
+          })
+          .catch(() => this.$message.error('刷新文件列表失败，请检查网络连接'));
+      },
+
+      toggleSelect(index, name){
+        const i = this.tableData.findIndex(f => f.name === name);
+        this.tableData[i].selected = !this.tableData[i].selected;
+      },
+      toggleLike(index, name){
+        const i = this.tableData.findIndex(f => f.name === name);
+        this.tableData[i].metadata.liked = !(this.tableData[i].metadata.liked ?? false);
+        const req = { method:'GET', redirect:'follow', credentials:'include' };
+        fetch(`./api/manage/toggleLike/${name}`, req)
+          .then(r => r.json())
+          .then(result => {
+            if (!result.success) {
+              this.tableData[i].metadata.liked = !this.tableData[i].metadata.liked;
+              this.$message({message:'更新收藏状态失败，请稍后重试', type:'error'});
             } else {
-              this.$message.success(this.tableData[fileIndex].metadata.liked ? '收藏成功' : '取消收藏');
+              this.$message.success(this.tableData[i].metadata.liked ? '收藏成功' : '取消收藏');
             }
           })
-          .catch(error => { // 如果服务器响应错误，将状态还原
-            this.tableData[fileIndex].metadata.liked = !this.tableData[fileIndex].metadata.liked;
-            this.$message({message: '同步服务器失败，请检查网络连接', type: 'error'});
+          .catch(()=>{
+            this.tableData[i].metadata.liked = !this.tableData[i].metadata.liked;
+            this.$message({message:'同步服务器失败，请检查网络连接', type:'error'});
           });
       },
-      handleDelete(index, key) {
+      handleDelete(index, key){
         this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
+          confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
         }).then(() => {
-          fetch(`./api/manage/delete/${key}`, { method: 'GET', credentials: 'include' })
-            .then(response => response.ok ? this.tableData.splice(index, 1) : Promise.reject())
-            .then(() => {
-              this.updateStats();
-              this.$message.success('删除成功！');
-            })
-            .catch(() => this.$message.error('删除失败，请检查网络连接'));
-        }).catch(() => this.$message.info('已取消删除'));
+          fetch(`./api/manage/delete/${key}`, { method:'GET', credentials:'include' })
+            .then(r => r.ok ? this.tableData.splice(index,1) : Promise.reject())
+            .then(()=>{ this.updateStats(); this.$message.success('删除成功！'); })
+            .catch(()=> this.$message.error('删除失败，请检查网络连接'));
+        }).catch(()=> this.$message.info('已取消删除'));
       },
-      copyToClipboardFallback(text) {
+      copyToClipboardFallback(text){
         const textarea = document.createElement('textarea');
         document.body.appendChild(textarea);
         textarea.style.position = 'fixed';
@@ -606,180 +547,129 @@
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
+        return Promise.resolve();
       },
-      handleCopy(index, key) {
+      handleCopy(index, key){
         const link = `${this.baseURL}/file/${key}`;
         (navigator.clipboard?.writeText(link) || this.copyToClipboardFallback(link))
           .then(() => this.$message.success('复制文件链接成功~'))
           .catch(() => this.$message.error('自动复制失败，请手动复制链接：' + link));
       },
-      // 批处理相关
-      selectAllInPage() {  // 全选当前页
-        const selected = !this.paginatedTableData.every(file => file.selected);
-        this.paginatedTableData.forEach(file => file.selected = selected);
-      },
-      handleBatchDelete() {  // 批量删除
-        this.$confirm('此操作将永久删除这 ' + this.selectedFiles.length + ' 个文件, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          const promises = this.selectedFiles.map(file => fetch(`./api/manage/delete/${file.name}`, { method: 'GET', credentials: 'include' }));
 
+      /* 批处理 */
+      selectAllInPage(){
+        const selected = !this.paginatedTableData.every(f => f.selected);
+        this.paginatedTableData.forEach(f => f.selected = selected);
+      },
+      handleBatchDelete(){
+        this.$confirm('此操作将永久删除这 ' + this.selectedFiles.length + ' 个文件, 是否继续?', '提示', {
+          confirmButtonText:'确定', cancelButtonText:'取消', type:'warning'
+        }).then(()=>{
+          const promises = this.selectedFiles.map(f => fetch(`./api/manage/delete/${f.name}`, { method:'GET', credentials:'include' }));
           Promise.all(promises)
             .then(results => {
-              results.forEach((response, index) => {
-                if (response.ok) {
-                  const fileIndex = this.tableData.findIndex(file => file.name === this.selectedFiles[index].name);
-                  if (fileIndex !== -1) {
-                    this.tableData.splice(fileIndex, 1);
-                  }
+              results.forEach((r, idx) => {
+                if (r.ok) {
+                  const i = this.tableData.findIndex(file => file.name === this.selectedFiles[idx].name);
+                  if (i !== -1) this.tableData.splice(i,1);
                 }
               });
               this.selectedFiles = [];
               this.updateStats();
               this.$message.success('批量删除成功!');
             })
-            .catch(() => this.$message.error('批量删除失败，请检查网络连接'));
-        }).catch(() => this.$message.info('已取消批量删除'));
+            .catch(()=> this.$message.error('批量删除失败，请检查网络连接'));
+        }).catch(()=> this.$message.info('已取消批量删除'));
       },
-      handleBatchCopy() {  // 批量复制链接
-        const links = this.selectedFiles.map(file => `${document.location.origin}/file/${file.name}`).join('\n');
+      handleBatchCopy(){
+        const links = this.selectedFiles.map(f => `${document.location.origin}/file/${f.name}`).join('\n');
         (navigator.clipboard?.writeText(links) || this.copyToClipboardFallback(links))
           .then(() => this.$message.success('批量复制链接成功~'));
       },
-      handleBatchDownload() {  // 批量下载
+      handleBatchDownload(){
         this.$message.info(`正在下载 ${this.selectedFiles.length} 个文件`, { duration: 1000 });
-        this.selectedFiles.forEach((file, index) => {
-          setTimeout(() => {
+        this.selectedFiles.forEach((f, idx) => {
+          setTimeout(()=>{
             const link = document.createElement('a');
-            link.href = `/file/${file.name}`;
-            link.download = file.metadata.fileName || file.name;
+            link.href = `/file/${f.name}`;
+            link.download = f.metadata.fileName || f.name;
             link.click();
-          }, index * 800);
+          }, idx * 800);
         });
         this.selectedFiles = [];
       },
-      handleBatchBlockOrUnblock(type) {  // 批量加入黑/白名单
+      handleBatchBlockOrUnblock(type){
         if (type !== 'Block' && type !== 'White') { this.$message.error('无效的操作类型'); return; }
-        const typeToName = { Block: '黑名单', White: '白名单' };
-        this.$confirm(`确定要将这 ${this.selectedFiles.length} 个文件加入${typeToName[type]}吗?`, '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          const promises = this.selectedFiles.map(file => fetch(`./api/manage/${type.toLowerCase()}/${file.name}`, { method: 'GET', credentials: 'include' }));
-
+        const map = { Block: '黑名单', White: '白名单' };
+        this.$confirm(`确定要将这 ${this.selectedFiles.length} 个文件加入${map[type]}吗?`, '提示', {
+          confirmButtonText:'确定', cancelButtonText:'取消', type:'warning'
+        }).then(()=>{
+          const promises = this.selectedFiles.map(f => fetch(`./api/manage/${type.toLowerCase()}/${f.name}`, { method:'GET', credentials:'include' }));
           Promise.all(promises)
-            .then(responses => {
-              responses.forEach((response, index) => {
-                if (response.ok) {
-                  const fileIndex = this.tableData.findIndex(item => item.name === this.selectedFiles[index].name);
-                  if (fileIndex !== -1) {
-                    this.tableData[fileIndex].metadata.ListType = type;
-                  }
+            .then(resps => {
+              resps.forEach((r, idx) => {
+                if (r.ok) {
+                  const i = this.tableData.findIndex(it => it.name === this.selectedFiles[idx].name);
+                  if (i !== -1) this.tableData[i].metadata.ListType = type;
                 }
               });
-              this.$message.success(`批量加入${typeToName[type]}成功`);
+              this.$message.success(`批量加入${map[type]}成功`);
               this.selectedFiles = [];
             })
-            .catch(() => this.$message.error(`操作失败，请检查网络连接`));
+            .catch(()=> this.$message.error('操作失败，请检查网络连接'));
         });
       },
-      handleBatchOperation(command) {
-        if (this.selectedFiles.length === 0) { this.$message.warning('请先选择文件'); return; }
-        switch (command) {
-          case 'copy': this.handleBatchCopy(); break;
-          case 'delete': this.handleBatchDelete(); break;
-          case 'download': this.handleBatchDownload(); break;
-          case 'block': this.handleBatchBlockOrUnblock('Block'); break;
-          case 'unblock': this.handleBatchBlockOrUnblock('White'); break;
-        }
+      handleBatchOperation(cmd){
+        if (!this.selectedFiles.length) { this.$message.warning('请先选择文件'); return; }
+        if (cmd === 'copy') this.handleBatchCopy();
+        if (cmd === 'delete') this.handleBatchDelete();
+        if (cmd === 'download') this.handleBatchDownload();
+        if (cmd === 'block') this.handleBatchBlockOrUnblock('Block');
+        if (cmd === 'unblock') this.handleBatchBlockOrUnblock('White');
       },
-      // 工具相关
-      handleToolkit(command) {
-        switch (command) {
-          case 'selectAllInPage': this.selectAllInPage(); break;
-          case 'checkBrokenFiles': this.checkBrokenFiles(); break;
-          case 'editWebsites': this.editWebsites(); break;
-        }
+
+      /* 工具 */
+      handleToolkit(cmd){
+        if (cmd === 'selectAllInPage') this.selectAllInPage();
+        if (cmd === 'checkBrokenFiles') this.checkBrokenFiles();
+        if (cmd === 'editWebsites') this.editWebsites();
       },
-      switchFileType(type) {  // 切换文件类型
+      switchFileType(type){
         this.fileType = type;
         this.currentPage = 1;
         localStorage.setItem('fileType', type);
-        this.$message({
-          message: `已切换为${this.fileConfig[type].name}模式, 共${this.fileConfig[type].count}个文件`,
-          type: 'success',
-          duration: 1500
-        });
+        this.$message({ message:`已切换为${this.fileConfig[type].name}模式, 共${this.fileConfig[type].count}个文件`, type:'success', duration:1500 });
       },
-      checkBrokenFiles() {  // 检测失效文件
-        const loadingMessage = this.$message({ message: '正在检测失效文件...', duration: 0});
-
+      checkBrokenFiles(){
+        const loading = this.$message({ message:'正在检测失效文件...', duration:0 });
         let brokenCount = 0;
         const promises = this.tableData.map((item, index) => {
-          const fileIndex = this.tableData.findIndex(item => item.name === this.selectedFiles[index].name);
-          return new Promise((resolve) => {
-            fetch(`${this.baseURL}/file/${item.name}`, {
-              method: 'HEAD',
-              cache: 'no-cache'  // 避免缓存影响检测结果
-            })
-              .then(response => {
-                if (!response.ok) {
-                  brokenCount++;
-                  this.tableData[fileIndex].selected = true;
-                  resolve({ index, status: 'error' });
-                } else {
-                  resolve({ index, status: 'success' });
-                }
+          const i = this.tableData.findIndex(it => it.name === this.selectedFiles[index]?.name);
+          return new Promise(resolve => {
+            fetch(`${this.baseURL}/file/${item.name}`, { method:'HEAD', cache:'no-cache' })
+              .then(r => {
+                if (!r.ok) { brokenCount++; if (i !== -1) this.tableData[i].selected = true; resolve({index, status:'error'}); }
+                else resolve({index, status:'success'});
               })
-              .catch(() => {
-                brokenCount++;
-                this.tableData[fileIndex].selected = true;
-                resolve({ index, status: 'error' });
-              });
+              .catch(()=> { brokenCount++; if (i !== -1) this.tableData[i].selected = true; resolve({index, status:'error'}); });
           });
         });
-
-        Promise.all(promises).then(() => {
-          loadingMessage.close();
+        Promise.all(promises).then(()=>{
+          loading.close();
           if (brokenCount > 0) {
-            this.$message({
-              dangerouslyUseHTMLString: true,
-              message: `检测到 ${brokenCount} 个失效文件，已自动选中。<br>您可以使用批量删除功能移除它们。`,
-              type: 'warning',
-              duration: 5000
-            });
+            this.$message({ dangerouslyUseHTMLString:true, message:`检测到 ${brokenCount} 个失效文件，已自动选中。<br>您可以使用批量删除功能移除它们。`, type:'warning', duration:5000 });
           } else {
-            this.$message({
-              message: '未检测到失效文件',
-              type: 'success'
-            });
+            this.$message({ message:'未检测到失效文件', type:'success' });
           }
         });
       },
-      // 处理网站点击
-      handleWebsite(url) { window.open(url, '_blank'); },
-      // 编辑快捷方式
-      editWebsites() {
-        const websiteText = this.quickWebsites
-          .map(site => `${site.name}|${site.url}|${site.icon}`)
-          .join('\n');
-
+      handleWebsite(url){ window.open(url, '_blank'); },
+      editWebsites(){
+        const websiteText = this.quickWebsites.map(s => `${s.name}|${s.url}|${s.icon}`).join('\n');
         this.$prompt('', '编辑快捷方式', {
-          inputType: 'textarea',
-          inputValue: websiteText,
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          dangerouslyUseHTMLString: true,
-          customClass: 'website-edit-dialog',
-          message: `
-            <div>
-              每行一个网站，格式：名称|网址|图标类名<br>
-              图标需在 <a href="https://fontawesome.com/v6/search?m=free" target="_blank" style="color: #409EFF; text-decoration: underline">Font Awesome</a> 中选择
-            </div>
-          `,
+          inputType:'textarea', inputValue: websiteText, confirmButtonText:'确定', cancelButtonText:'取消',
+          dangerouslyUseHTMLString:true, customClass:'website-edit-dialog',
+          message:`<div>每行一个网站，格式：名称|网址|图标类名<br>图标需在 <a href="https://fontawesome.com/v6/search?m=free" target="_blank" style="color: #409EFF; text-decoration: underline">Font Awesome</a> 中选择</div>`,
           inputValidator: (value) => {
             const lines = value.split('\n');
             if (lines.length > 10) return '不能超过10行';
@@ -788,26 +678,21 @@
               const [name, url, icon = 'fas fa-link'] = line.split('|');
               if (!name || !url) return '名称和网址不能为空：' + line;
               if (!(/^https?:\/\/.+/.test(url) || /^\.\/.*/.test(url))) return '网址格式错误：'+line;
-              if (!/^(fas?|fa-brands|fa-regular|fa-solid)\s+fa-[a-z0-9-]+$/.test(icon)) {
-                return '图标类名格式错误：' + line;
-              }
+              if (!/^(fas?|fa-brands|fa-regular|fa-solid)\s+fa-[a-z0-9-]+$/.test(icon)) return '图标类名格式错误：' + line;
             }
             return true;
           }
         }).then(({ value }) => {
-          const newSites = value.split('\n')
-            .filter(line => line.trim())
-            .map(line => {
-              const [name, url, icon = 'fas fa-link'] = line.split('|');
-              return { name, url, icon };
-            });
+          const newSites = value.split('\n').filter(l => l.trim()).map(line => {
+            const [name, url, icon = 'fas fa-link'] = line.split('|'); return { name, url, icon };
+          });
           this.quickWebsites = newSites;
           localStorage.setItem('quickWebsites', JSON.stringify(newSites));
           this.$message.success('保存成功');
-        }).catch(() => {});
+        }).catch(()=>{});
       },
-      getFileIcon(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
+      getFileIcon(filename){
+        const ext = (filename.split('.').pop() || '').toLowerCase();
         const iconMap = {
           'pdf': 'fas fa-file-pdf',
           'doc,docx': 'fas fa-file-word',
@@ -823,86 +708,97 @@
           'psd,ai,eps,cdr': 'fas fa-file-image',
           'exe,msi,app,dmg,deb,rpm': 'fas fa-file-arrow-down'
         };
-        for(const [exts, icon] of Object.entries(iconMap)) {
-          if(exts.split(',').includes(ext)) {
-            return icon;
-          }
+        for (const [exts, icon] of Object.entries(iconMap)) {
+          if (exts.split(',').includes(ext)) return icon;
         }
         return 'fas fa-file';
       },
-      getFileType(filename) {
-        const ext = filename.split('.').pop();
-        return `${ext.toUpperCase()}`;
-      },
-      handleEditName(item) {
+      getFileType(filename){ const ext = filename.split('.').pop(); return `${(ext||'').toUpperCase()}`; },
+      handleEditName(item){
         this.$prompt('', '修改文件名', {
           inputValue: item.metadata?.fileName || item.name,
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          inputValidator: (value) => {
-            if (!value) return '文件名不能为空';
-            if (value.length > 64) return '文件名不能超过64个字符';
-            return true;
-          }
+          confirmButtonText:'确定', cancelButtonText:'取消',
+          inputValidator: (v)=>{ if(!v) return '文件名不能为空'; if (v.length>64) return '文件名不能超过64个字符'; return true; }
         }).then(({ value }) => {
-          fetch(`./api/manage/editName/${item.name}?newName=${encodeURIComponent(value)}`, {
-            method: 'GET',
-            credentials: 'include'
-          })
-          .then(response => response.json())
-          .then(result => {
-            if (result.success) {
-              item.metadata.fileName = value;
-              this.$message.success('文件名修改成功');
-            } else {
-              this.$message.error('文件名修改失败');
-            }
-          })
-          .catch(() => this.$message.error('修改文件名时出错，请检查网络连接'));
-        }).catch(() => {});
+          fetch(`./api/manage/editName/${item.name}?newName=${encodeURIComponent(value)}`, { method:'GET', credentials:'include' })
+            .then(r=>r.json())
+            .then(result => {
+              if (result.success) { item.metadata.fileName = value; this.$message.success('文件名修改成功'); }
+              else this.$message.error('文件名修改失败');
+            })
+            .catch(()=> this.$message.error('修改文件名时出错，请检查网络连接'));
+        }).catch(()=>{});
+      },
+
+      /* ★ 新增：本次上传快捷操作 */
+      selectLastUploaded(){
+        if (!this.lastUploaded.length) return;
+        const set = new Set(this.lastUploaded);
+        this.paginatedTableData.forEach(item => { if (set.has(item.name)) item.selected = true; });
+        this.$message.success('已选中本次上传（当前页可见）的文件');
+      },
+      copyLastUploaded(){
+        if (!this.lastUploaded.length) return this.$message.warning('没有本次上传记录');
+        const links = this.lastUploaded.map(n => `${this.baseURL}/file/${n}`).join('\n');
+        (navigator.clipboard?.writeText(links) || this.copyToClipboardFallback(links))
+          .then(()=> this.$message.success('已复制本次上传的所有链接'));
+      },
+      async makeShortcodeForLast(){
+        if (!this.lastUploaded.length) return this.$message.warning('没有本次上传记录');
+        const urls = this.lastUploaded.map(n => `${this.baseURL}/file/${n}`);
+        try {
+          const res = await fetch('/wp', {
+            method: 'POST',
+            headers: {'content-type':'application/json'},
+            body: JSON.stringify({ urls, cols: 5, gap: 8, lazy: 1 })
+          });
+          const data = await res.json();
+          const sc = data.shortcode || `[tg-gallery cols="5" gap="8" lazy="1"]\n${urls.join('\n')}\n[/tg-gallery]`;
+          (navigator.clipboard?.writeText(sc) || this.copyToClipboardFallback(sc))
+            .then(()=> this.$message.success('短代码已复制，直接粘贴到文章即可'));
+        } catch (e) {
+          const sc = `[tg-gallery cols="5" gap="8" lazy="1"]\n${urls.join('\n')}\n[/tg-gallery]`;
+          (navigator.clipboard?.writeText(sc) || this.copyToClipboardFallback(sc))
+            .then(()=> this.$message.success('短代码已复制（本地拼接）'));
+        }
       }
     },
-    mounted() {
+    mounted(){
       window.addEventListener('resize', this.calculatePageSize);
       this.updateWindowWidth();
       fetch("./api/manage/check", { method: 'GET', credentials: 'include' })
-        .then(response => response.text())
+        .then(r => r.text())
         .then(result => result === "true" ? this.showLogoutButton = true : window.location.href = "./api/manage/login")
-        .catch(() => this.$message.error('同步数据时出错，请检查网络连接'));
+        .catch(()=> this.$message.error('同步数据时出错，请检查网络连接'));
 
-      // 获取文件列表数据
-        fetch("./api/manage/list?limit=100", { method: 'GET', credentials: 'include' })
-          .then(response => response.json())
-          .then(result => {
-            console.log("result: ", result);
-            const files = result.keys || [];
-            this.nextCursor = result.list_complete ? null : result.cursor;
-            this.tableData = files.map(file => ({
-              ...file,
-              selected: false,
-              metadata: {
-                ...file.metadata,
-                liked: file.metadata.liked ?? false,
-                fileName: file.metadata.fileName ?? file.name,
-                fileSize: file.metadata.fileSize ?? 0
-              }
-            }));
-            this.updateStats();
-            // 恢复设置
-            this.sortOption = localStorage.getItem('sortOption') || this.sortOption;
-            this.sortData(this.tableData);
-            this.fileType = localStorage.getItem('fileType') || this.fileType;
-            this.switchFileType(this.fileType);
-          })
-          .catch(() => this.$message.error('同步数据时出错，请检查网络连接'));
+      fetch("./api/manage/list?limit=100", { method: 'GET', credentials: 'include' })
+        .then(r => r.json())
+        .then(result => {
+          const files = result.keys || [];
+          this.nextCursor = result.list_complete ? null : result.cursor;
+          this.tableData = files.map(file => ({
+            ...file,
+            selected: false,
+            metadata: {
+              ...file.metadata,
+              liked: file.metadata.liked ?? false,
+              fileName: file.metadata.fileName ?? file.name,
+              fileSize: file.metadata.fileSize ?? 0
+            }
+          }));
+          this.updateStats();
+          this.sortOption = localStorage.getItem('sortOption') || this.sortOption;
+          this.sortData(this.tableData);
+          this.fileType = localStorage.getItem('fileType') || this.fileType;
+          this.switchFileType(this.fileType);
+        })
+        .catch(()=> this.$message.error('同步数据时出错，请检查网络连接'));
 
       if (localStorage.getItem('quickWebsites')) {
         this.quickWebsites = JSON.parse(localStorage.getItem('quickWebsites'));
       }
     },
-    beforeDestroy() {
-      window.removeEventListener('resize', this.calculatePageSize);
-    }
+    beforeDestroy(){ window.removeEventListener('resize', this.calculatePageSize); }
   });
 </script>
 </html>
